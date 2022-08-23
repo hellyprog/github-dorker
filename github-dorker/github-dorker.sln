@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32630.192
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "github-dorker", "github-dorker.csproj", "{2C31C375-2127-4907-846E-2D22D4B2437A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2C31C375-2127-4907-846E-2D22D4B2437A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C31C375-2127-4907-846E-2D22D4B2437A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C31C375-2127-4907-846E-2D22D4B2437A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C31C375-2127-4907-846E-2D22D4B2437A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B99BDF05-B376-4696-8290-2C419C955AC7}
+	EndGlobalSection
+EndGlobal
