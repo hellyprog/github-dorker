@@ -18,38 +18,58 @@ namespace GithubDorker
 
             parsedArgs.TryGetValue("-t", out var tokens);
             var parsedToken = tokens?.FirstOrDefault() ?? throw new ArgumentException("Token is not provided");
-            parsedArgs.TryGetValue("-org", out var organization);
 
-            var httpClient = new HttpClient();
-            httpClient.BaseAddress = new Uri("https://api.github.com");
-            httpClient.DefaultRequestHeaders.Add("Authorization", $"token {parsedToken}");
-            httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
-            httpClient.DefaultRequestHeaders.Add("User-Agent", "github-dorker");
+            parsedArgs.TryGetValue("-org", out var organizations);
+            var parsedOrganization = organizations?.First() ?? string.Empty;
+
+            var httpClient = CreateGithubClient(parsedToken);
 
             for (int i = 0; i < Math.Ceiling(dorkList.Count / (double)batchSize); i++)
             {
                 var currentBatch = dorkList.Skip(i * batchSize)
-                    .Take(batchSize);
+                    .Take(batchSize)
+                    .ToList();
 
                 foreach (var item in currentBatch)
-                {
-                    Console.Write($"Searching: {item} ");
-
-                    var response = await httpClient.GetAsync($"/search/code?q={HttpUtility.UrlEncode(item)}+org:{organization.First()}");
+                { 
+                    var response = await httpClient.GetAsync($"/search/code?q={HttpUtility.UrlEncode(item)}+org:{parsedOrganization}");
 
                     if (response.IsSuccessStatusCode)
                     {
-                        var content = await response.Content.ReadAsStringAsync();
-                        dynamic result = JsonConvert.DeserializeObject(content);
-                        Console.WriteLine(result?.total_count);
+                        await ProcessSuccessfullResponseAsync(response, item, parsedOrganization);
                     }
-
-                    Console.WriteLine();
                 }
 
                 await Task.Delay(60 * 1000);
             }
 
+        }
+
+        static async Task ProcessSuccessfullResponseAsync(HttpResponseMessage response, string currentItem, string organizationName)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<GithubResponse>(content);
+            
+            Console.WriteLine($"Searching: {currentItem} ({result?.total_count})");
+
+            if (result?.total_count > 0)
+            {    
+                Console.WriteLine($"https://github.com/search?q=org%3A{organizationName}+{currentItem}");
+            }
+
+            Console.WriteLine();
+        }
+
+        static HttpClient CreateGithubClient(string apiToken)
+        {
+            var httpClient = new HttpClient();
+            httpClient.BaseAddress = new Uri("https://api.github.com");
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"token {apiToken}");
+            httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
+            httpClient.DefaultRequestHeaders.Add("User-Agent", "github-dorker");
+            httpClient.Timeout = TimeSpan.FromMinutes(1);
+
+            return httpClient;
         }
 
         static async Task<List<string>> GetSearchTermsAsync(string dorkFilePath)
