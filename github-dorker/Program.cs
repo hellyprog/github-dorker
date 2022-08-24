@@ -23,6 +23,8 @@ namespace GithubDorker
             var httpClient = new HttpClient();
             httpClient.BaseAddress = new Uri("https://api.github.com");
             httpClient.DefaultRequestHeaders.Add("Authorization", $"token {parsedToken}");
+            httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
+            httpClient.DefaultRequestHeaders.Add("User-Agent", "github-dorker");
 
             for (int i = 0; i < Math.Ceiling(dorkList.Count / (double)batchSize); i++)
             {
@@ -32,6 +34,7 @@ namespace GithubDorker
                 foreach (var item in currentBatch)
                 {
                     Console.Write($"Searching: {item} ");
+
                     var response = await httpClient.GetAsync($"/search/code?q={HttpUtility.UrlEncode(item)}+org:{organization.First()}");
 
                     if (response.IsSuccessStatusCode)
