@@ -5,7 +5,7 @@ namespace GithubDorker
 {
     class GithubDorker
     {
-        const int batchSize = 30;
+        const int batchSize = 14;
 
         static async Task Main(string[] args)
         {
@@ -31,7 +31,7 @@ namespace GithubDorker
                     .ToList();
 
                 foreach (var item in currentBatch)
-                { 
+                {
                     var response = await httpClient.GetAsync($"/search/code?q={HttpUtility.UrlEncode(item)}+org:{parsedOrganization}");
 
                     if (response.IsSuccessStatusCode)
