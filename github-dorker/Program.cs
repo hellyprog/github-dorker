@@ -28,18 +28,25 @@ namespace GithubDorker
             {
                 var currentBatch = dorkList.Skip(i * batchSize)
                     .Take(batchSize)
+                    .Select(x => httpClient.GetAsync($"/search/code?q={HttpUtility.UrlEncode(x)}+org:{parsedOrganization}")
+                        .ContinueWith(httpCallTask => new
+                        {
+                            Response = httpCallTask.Result,
+                            SearchItem = x
+                        }))
                     .ToList();
 
-                foreach (var item in currentBatch)
-                {
-                    var response = await httpClient.GetAsync($"/search/code?q={HttpUtility.UrlEncode(item)}+org:{parsedOrganization}");
+                var data = await Task.WhenAll(currentBatch);
 
-                    if (response.IsSuccessStatusCode)
+                foreach (var item in data)
+                {
+                    if (item.Response.IsSuccessStatusCode)
                     {
-                        await ProcessSuccessfullResponseAsync(response, item, parsedOrganization);
-                    }
+                        await ProcessSuccessfullResponseAsync(item.Response, item.SearchItem, parsedOrganization).ConfigureAwait(true);
+                    } 
                 }
 
+                Console.WriteLine("Sleep for a minute to avoid rate-limitting");
                 await Task.Delay(60 * 1000);
             }
 
@@ -51,11 +58,9 @@ namespace GithubDorker
             var result = JsonConvert.DeserializeObject<GithubResponse>(content);
             
             Console.WriteLine($"Searching: {currentItem} ({result?.total_count})");
-
-            if (result?.total_count > 0)
-            {    
-                Console.WriteLine($"https://github.com/search?q=org%3A{organizationName}+{currentItem}");
-            }
+            Console.WriteLine(result?.total_count > 0
+                ? $"https://github.com/search?q=org%3A{organizationName}+{currentItem}"
+                : "No result found for this term");
 
             Console.WriteLine();
         }
