@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.IO;
 using System.Web;
 
 namespace GithubDorker
@@ -23,6 +24,7 @@ namespace GithubDorker
             var parsedOrganization = organizations?.First() ?? string.Empty;
 
             var httpClient = CreateGithubClient(parsedToken);
+            var links = new List<string>();
 
             for (int i = 0; i < Math.Ceiling(dorkList.Count / (double)batchSize); i++)
             {
@@ -42,7 +44,12 @@ namespace GithubDorker
                 {
                     if (item.Response.IsSuccessStatusCode)
                     {
-                        await ProcessSuccessfullResponseAsync(item.Response, item.SearchItem, parsedOrganization).ConfigureAwait(true);
+                        var link = await ProcessSuccessfullResponseAsync(item.Response, item.SearchItem, parsedOrganization).ConfigureAwait(true);
+
+                        if (!string.IsNullOrEmpty(link))
+                        {
+                            links.Add(link);
+                        }
                     } 
                 }
 
@@ -50,9 +57,22 @@ namespace GithubDorker
                 await Task.Delay(60 * 1000);
             }
 
+            await WriteResultToFileAsync(parsedOrganization, links);
         }
 
-        static async Task ProcessSuccessfullResponseAsync(HttpResponseMessage response, string currentItem, string organizationName)
+        static async Task WriteResultToFileAsync(string parsedOrganization, List<string> links)
+        {
+            var directoryExists = Directory.Exists(@"C://github-dorker");
+
+            if (!directoryExists)
+            {
+                Directory.CreateDirectory(@"C://github-dorker");
+            }
+
+            await File.WriteAllTextAsync($@"C://github-dorker/{parsedOrganization}-{DateTime.Now}.txt", links.Aggregate((a, b) => a + b + '\n'));
+        }
+
+        static async Task<string> ProcessSuccessfullResponseAsync(HttpResponseMessage response, string currentItem, string organizationName)
         {
             var content = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<GithubResponse>(content);
@@ -63,6 +83,8 @@ namespace GithubDorker
                 : "No result found for this term");
 
             Console.WriteLine();
+
+            return result?.total_count > 0 ? $"https://github.com/search?q=org%3A{organizationName}+{currentItem}" : default;
         }
 
         static HttpClient CreateGithubClient(string apiToken)
