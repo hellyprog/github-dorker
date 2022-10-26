@@ -6,6 +6,10 @@
     <RootNamespace>github_dorker</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+	<PackAsTool>true</PackAsTool>
+	<ToolCommandName>github-dorker</ToolCommandName>
+	<PackageOutputPath>./nupkg</PackageOutputPath>
   </PropertyGroup>
 
   <ItemGroup>

@@ -2,7 +2,7 @@
   "profiles": {
     "github-dorker": {
       "commandName": "Project",
-      "commandLineArgs": "-df C:\\Users\\Volodymyr\\Documents\\bb-tools\\github-dorker\\github-dorker\\medium_dorks.txt -t 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 -org SumoLogic"
+      "commandLineArgs": "-df C:\\Users\\Volodymyr\\Documents\\bb-tools\\github-dorker\\github-dorker\\medium_dorks.txt -t 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 -org JuulLabs"
     }
   }
 }
