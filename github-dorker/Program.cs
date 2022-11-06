@@ -10,6 +10,8 @@ namespace GithubDorker
 
         static async Task Main(string[] args)
         {
+            DisplayLogo();
+
             var argumentParser = new ArgumentParser();
             var parsedArgs = argumentParser.ParseArguments(args);
 
@@ -58,6 +60,18 @@ namespace GithubDorker
             }
 
             await WriteResultToFileAsync(parsedOrganization, links);
+        }
+
+        private static void DisplayLogo()
+        {
+            Console.WriteLine(@"
+                |||          _ _   _           _               _            _              |||
+                |||     __ _(_) |_| |__  _   _| |__         __| | ___  _ __| | _____ _ __  |||
+                |||    / _` | | __| '_ \| | | | '_ \ _____ / _` |/ _ \| '__| |/ / _ \ '__| |||
+                |||   | (_| | | |_| | | | |_| | |_) |_____| (_| | (_) | |  |   <  __/ |    |||
+                |||    \__, |_|\__|_| |_|\__,_|_.__/       \__,_|\___/|_|  |_|\_\___|_|    |||
+                |||    |___/                                                               |||
+            ");
         }
 
         static async Task WriteResultToFileAsync(string parsedOrganization, List<string> links)
