@@ -18,9 +18,14 @@ namespace GithubDorker
             if (parsedArgs.Count == 0 || (parsedArgs.Count == 1 && parsedArgs.TryGetValue("-h", out _)))
             {
                 Console.WriteLine("Usage:");
-                Console.WriteLine("-df  -  dork file path");
-                Console.WriteLine("-t  -  github token");
-                Console.WriteLine("-org  -  organization name");
+                Console.WriteLine("  -df   -  dork file path");
+                Console.WriteLine("  -t    -  github token");
+                Console.WriteLine("  -org  -  organization name");
+                Console.WriteLine();
+
+                Console.WriteLine("Example:");
+                Console.WriteLine(@"github-dorker -df C:\\lists\\medium_dorks.txt -t ghp_pxfJBrsx8nDPyn92ar14JXCbqqaCV70Ar6mL -org Amazon");
+                Console.WriteLine();
             }
             else
             {
