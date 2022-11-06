@@ -15,51 +15,61 @@ namespace GithubDorker
             var argumentParser = new ArgumentParser();
             var parsedArgs = argumentParser.ParseArguments(args);
 
-            parsedArgs.TryGetValue("-df", out var files);
-            var dorkFilePath = files?.FirstOrDefault() ?? throw new ArgumentException("Dork file is not provided");
-            var dorkList = await GetSearchTermsAsync(dorkFilePath);
-
-            parsedArgs.TryGetValue("-t", out var tokens);
-            var parsedToken = tokens?.FirstOrDefault() ?? throw new ArgumentException("Token is not provided");
-
-            parsedArgs.TryGetValue("-org", out var organizations);
-            var parsedOrganization = organizations?.First() ?? string.Empty;
-
-            var httpClient = CreateGithubClient(parsedToken);
-            var links = new List<string>();
-
-            for (int i = 0; i < Math.Ceiling(dorkList.Count / (double)batchSize); i++)
+            if (parsedArgs.Count == 0 || (parsedArgs.Count == 1 && parsedArgs.TryGetValue("-h", out _)))
             {
-                var currentBatch = dorkList.Skip(i * batchSize)
-                    .Take(batchSize)
-                    .Select(x => httpClient.GetAsync($"/search/code?q={HttpUtility.UrlEncode(x)}+org:{parsedOrganization}")
-                        .ContinueWith(httpCallTask => new
-                        {
-                            Response = httpCallTask.Result,
-                            SearchItem = x
-                        }))
-                    .ToList();
+                Console.WriteLine("Usage:");
+                Console.WriteLine("-df  -  dork file path");
+                Console.WriteLine("-t  -  github token");
+                Console.WriteLine("-org  -  organization name");
+            }
+            else
+            {
+                parsedArgs.TryGetValue("-df", out var files);
+                var dorkFilePath = files?.FirstOrDefault() ?? throw new ArgumentException("Dork file is not provided");
+                var dorkList = await GetSearchTermsAsync(dorkFilePath);
 
-                var data = await Task.WhenAll(currentBatch);
+                parsedArgs.TryGetValue("-t", out var tokens);
+                var parsedToken = tokens?.FirstOrDefault() ?? throw new ArgumentException("Token is not provided");
 
-                foreach (var item in data)
+                parsedArgs.TryGetValue("-org", out var organizations);
+                var parsedOrganization = organizations?.First() ?? string.Empty;
+
+                var httpClient = CreateGithubClient(parsedToken);
+                var links = new List<string>();
+
+                for (int i = 0; i < Math.Ceiling(dorkList.Count / (double)batchSize); i++)
                 {
-                    if (item.Response.IsSuccessStatusCode)
-                    {
-                        var link = await ProcessSuccessfullResponseAsync(item.Response, item.SearchItem, parsedOrganization).ConfigureAwait(true);
+                    var currentBatch = dorkList.Skip(i * batchSize)
+                        .Take(batchSize)
+                        .Select(x => httpClient.GetAsync($"/search/code?q={HttpUtility.UrlEncode(x)}+org:{parsedOrganization}")
+                            .ContinueWith(httpCallTask => new
+                            {
+                                Response = httpCallTask.Result,
+                                SearchItem = x
+                            }))
+                        .ToList();
 
-                        if (!string.IsNullOrEmpty(link))
+                    var data = await Task.WhenAll(currentBatch);
+
+                    foreach (var item in data)
+                    {
+                        if (item.Response.IsSuccessStatusCode)
                         {
-                            links.Add(link);
+                            var link = await ProcessSuccessfullResponseAsync(item.Response, item.SearchItem, parsedOrganization).ConfigureAwait(true);
+
+                            if (!string.IsNullOrEmpty(link))
+                            {
+                                links.Add(link);
+                            }
                         }
-                    } 
+                    }
+
+                    Console.WriteLine("Sleep for a minute to avoid rate-limitting");
+                    await Task.Delay(60 * 1000);
                 }
 
-                Console.WriteLine("Sleep for a minute to avoid rate-limitting");
-                await Task.Delay(60 * 1000);
+                await WriteResultToFileAsync(parsedOrganization, links);
             }
-
-            await WriteResultToFileAsync(parsedOrganization, links);
         }
 
         private static void DisplayLogo()
